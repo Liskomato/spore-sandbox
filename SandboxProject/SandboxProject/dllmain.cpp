@@ -25,7 +25,7 @@ void Dispose()
 	// This method is called when the game is closing
 }
 
-member_detour(SetTargetPos__detour, Editors::CreatureWalkController, void(const Vector3&, bool, bool))
+member_detour(SetTargetPos__detour, Editors::EditorCreatureController, void(const Vector3&, bool, bool))
 {
 	void detoured(const Vector3 & pos, bool applyNow, bool ignoreZ)
 	{
@@ -46,7 +46,7 @@ void AttachDetours()
 
 	Terrain::FlatTerrain::AttachDetours();
 
-	SetTargetPos__detour::attach(GetAddress(Editors::CreatureWalkController, SetTargetPosition));
+	SetTargetPos__detour::attach(GetAddress(Editors::EditorCreatureController, SetTargetPosition));
 }
 
 

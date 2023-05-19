@@ -62,7 +62,7 @@ bool SandboxMode::OnEnter()
 
 	Simulator::InitializeWithoutPlanet();
 
-	Simulator::GetLightingWorld()->SetConfiguration(id("CreatureEditor"));
+	Simulator::GetLightingWorld()->SetLightingState(id("CreatureEditor"));
 	
 	// creature_editorModel~!0x19A3A9AE.crt
 	// ResourceKey(0x1C6A4146, TypeIDs::crt, 0x40626200)

@@ -69,10 +69,10 @@ void SbTerrainSystem::Generate() {
 	}
 }
 
-void SbTerrainSystem::Render(int flags, int layerIndex, App::cViewer** viewers, void*) {
+void SbTerrainSystem::DrawLayer(int flags, int layerIndex, App::cViewer** viewers, Graphics::RenderStatistics& statistics) {
 	//TODO
 
-	if (mpLightingWorld) mpLightingWorld->PrepareRender(viewers[0]);
+	if (mpLightingWorld) mpLightingWorld->ApplyGlobalState(viewers[0]);
 
 	for (auto chunk : mChunks) {
 		chunk->Render();

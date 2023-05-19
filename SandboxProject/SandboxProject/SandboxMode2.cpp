@@ -149,20 +149,20 @@ bool SandboxMode2::Dispose()
 bool SandboxMode2::OnEnter()
 {
 	mpModelWorld = ModelManager.CreateWorld(WORLD_ID);
-	mpLightingWorld = LightingManager.CreateWorld(WORLD_ID);
-	mpEffectWorld = SwarmManager.CreateWorld(WORLD_ID);
-	SwarmManager.SetActiveWorld(mpEffectWorld.get());
+	mpLightingWorld = LightingManager.CreateLightingWorld(WORLD_ID);
+	mpEffectWorld = EffectsManager.CreateWorld(WORLD_ID);
+	EffectsManager.SetDefaultWorld(mpEffectWorld.get());
 	mpAnimWorld = AnimManager.CreateWorld(u"SandboxMode");
 
 	mpAnimWorld->SetEffectWorld(mpEffectWorld.get());
 	mpAnimWorld->SetModelWorld(mpModelWorld.get());
 
 	//TODO sub_7826A0 related with shadows? check end of Editor_Update
-	mpLightingWorld->SetConfiguration(id("SandboxMode"));
-	mpModelWorld->AddLightingWorld(mpLightingWorld.get(), 0, false);
-	mpModelWorld->SetVisible(true);
+	mpLightingWorld->SetLightingState(id("SandboxMode"));
+	mpModelWorld->SetLightingWorld(mpLightingWorld.get(), 0, false);
+	mpModelWorld->SetActive(true);
 
-	RenderManager.AddRenderable(mpModelWorld->ToRenderable(), 8);
+	Renderer.RegisterLayer(mpModelWorld->AsLayer(), 8);
 
 	//CameraManager.SetActiveCameraByID(id("EffectEditorCamera"));
 	CameraManager.SetActiveCameraByID(SphereCamera::ID);
@@ -172,13 +172,13 @@ bool SandboxMode2::OnEnter()
 	mpModelWorld->UpdateModel(mpPlaneModel.get());
 	mpModelWorld->SetModelVisible(mpPlaneModel.get(), false);*/
 
-	mpTestBallModel = mpModelWorld->LoadModel(id("PbrTest"), id("SandboxModels"));
+	mpTestBallModel = mpModelWorld->CreateModel(id("PbrTest"), id("SandboxModels"));
 
 	//mpTestPlane = mpModelWorld->LoadModel(id("test_pbr_plane"), id("SandboxModels"));
 
 	mpCreature = mpAnimWorld->LoadCreature({ 0x67cd060, TypeIDs::crt, GroupIDs::CreatureModels });
-	mpModelWorld->UpdateModel(mpCreature->GetModel());
-	mpModelWorld->SetModelVisible(mpCreature->GetModel(), true);
+	mpModelWorld->StallUntilLoaded(mpCreature->GetModel());
+	mpModelWorld->SetInWorld(mpCreature->GetModel(), true);
 
 	mpCreatureController = new CreatureController(mpCreature.get(), mpModelWorld.get());
 	//mpCreatureController->field_84 = true;
@@ -190,14 +190,14 @@ bool SandboxMode2::OnEnter()
 	mpPBSky->Load(id("Atmosphere"), id("SandboxMode"));
 	mpPBSky->Precompute();
 	mpPBSky->SetSun(sunZenith, sunAzimuth);
-	RenderManager.AddRenderable(mpPBSky.get(), 4);
+	Renderer.RegisterLayer((Graphics::ILayer*)mpPBSky.get(), 4);
 
 	UpdateSunPosition();
 
 	mpTerrainSystem = new SbTerrainSystem();
 	mpTerrainSystem->Generate();
 	mpTerrainSystem->SetLightingWorld(mpLightingWorld.get());
-	RenderManager.AddRenderable(mpTerrainSystem.get(), 5);
+	Renderer.RegisterLayer((Graphics::ILayer*)mpTerrainSystem.get(), 5);
 
 	return true;
 }
@@ -211,7 +211,7 @@ void SandboxMode2::UpdateSunPosition() {
 		cosf(sunZenith)
 	);
 
-	mpLightingWorld->SetWorldTransform(Transform().SetRotation(Quaternion::GetRotationTo(Y_AXIS, sunDirection)));
+	mpLightingWorld->SetTransform(Transform().SetRotation(Quaternion::GetRotationTo(Y_AXIS, sunDirection)));
 }
 
 void SandboxMode2::OnExit()
@@ -294,8 +294,8 @@ bool SandboxMode2::OnMouseUp(MouseButton mouseButton, float mouseX, float mouseY
 					mpMovementCursorEffect->Stop();
 					mpMovementCursorEffect = nullptr;
 				}
-				if (SwarmManager.CreateEffect(0xE4173005, 0, mpMovementCursorEffect)) {
-					mpMovementCursorEffect->SetTransform(Transform().SetOffset(position));
+				if (EffectsManager.CreateVisualEffect(0xE4173005, 0, mpMovementCursorEffect)) {
+					mpMovementCursorEffect->SetSourceTransform(Transform().SetOffset(position));
 					mpMovementCursorEffect->Start();
 				}
 			}

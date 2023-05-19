@@ -2,10 +2,10 @@
 
 #include <Spore\BasicIncludes.h>
 
-#define PhysicallyBasedSkyPtr intrusive_ptr<PhysicallyBasedSky>
+#define PhysicallyBasedSkyPtr eastl::intrusive_ptr<PhysicallyBasedSky>
 
-class PhysicallyBasedSky 
-	: public Graphics::IRenderable
+class PhysicallyBasedSky
+	: public Graphics::ILayer
 	, public DefaultRefCounted
 {
 public:
@@ -14,7 +14,7 @@ public:
 
 	int AddRef() override;
 	int Release() override;
-	void Render(int flags, int layerIndex, App::cViewer**, void*) override;
+	void DrawLayer(int flags, int layerIndex, App::cViewer**, Graphics::RenderStatistics&) override;
 
 	bool Load(uint32_t instanceID, uint32_t groupID);
 
@@ -94,7 +94,7 @@ protected:
 
 		float transmittanceTextureWidth; int padding11[3];
 		float transmittanceTextureHeight; int padding12[3];
-		float scatteringTextureSizeNu; int padding13[3]; 
+		float scatteringTextureSizeNu; int padding13[3];
 		float scatteringTextureSizeMuS; int padding14[3];
 		float scatteringTextureSizeMu; int padding15[3];
 		float scatteringTextureSizeR; int padding16[3];

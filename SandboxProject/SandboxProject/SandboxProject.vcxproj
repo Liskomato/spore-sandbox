@@ -69,6 +69,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Users\tende\source\repos\Spore-ModAPI;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -178,6 +179,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="SdkPathConfig.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\source\repos\Spore-ModAPI\Spore ModAPI\Spore ModAPI.vcxproj">
+      <Project>{f057451a-1413-4d68-af56-1bf529933420}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

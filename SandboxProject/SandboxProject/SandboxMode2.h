@@ -51,7 +51,7 @@ protected:
 	SbTerrainSystemPtr mpTerrainSystem;
 
 	IModelWorldPtr mpModelWorld;
-	IEffectWorldPtr mpEffectWorld;
+	IEffectsWorldPtr mpEffectWorld;
 	ILightingWorldPtr mpLightingWorld;
 	IAnimWorldPtr mpAnimWorld;
 	AnimatedCreaturePtr mpCreature;
@@ -61,5 +61,5 @@ protected:
 	ModelPtr mpPlaneModel;
 	ModelPtr mpTestBallModel;
 
-	IEffectPtr mpMovementCursorEffect;
+	IVisualEffectPtr mpMovementCursorEffect;
 };

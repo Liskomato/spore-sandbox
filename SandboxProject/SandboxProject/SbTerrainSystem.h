@@ -9,7 +9,7 @@
 class SbTerrainSystem 
 	: public Object
 	, public DefaultRefCounted
-	, public Graphics::IRenderable
+	, public Graphics::ILayer
 {
 public:
 	static const uint32_t TYPE = id("SbTerrainSystem");
@@ -21,7 +21,7 @@ public:
 	int Release() override;
 	void* Cast(uint32_t type) const override;
 
-	void Render(int flags, int layerIndex, App::cViewer**, void*) override;
+	void DrawLayer(int flags, int layerIndex, App::cViewer**, Graphics::RenderStatistics&) override;
 
 	void SetLightingWorld(Graphics::ILightingWorld* world);
 	void Generate();

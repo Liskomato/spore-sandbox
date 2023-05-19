@@ -53,9 +53,9 @@ namespace Terrain
 		/* 80h */	virtual void func80h() override;  // related with player effects
 		/* 84h */	virtual void func84h() override;
 		/* 88h */	virtual void func88h() override;
-		/* 8Ch */	virtual bool AddToRender(Graphics::IRenderManager*) override;
-		/* 90h */	virtual void RemoveFromRender(Graphics::IRenderManager*) override;
-		/* 94h */	virtual bool IsAddedToRender(Graphics::IRenderManager*) override;
+		/* 8Ch */	virtual bool AddToRender(Graphics::IRenderer*) override;
+		/* 90h */	virtual void RemoveFromRender(Graphics::IRenderer*) override;
+		/* 94h */	virtual bool IsAddedToRender(Graphics::IRenderer*) override;
 		/* 98h */	virtual void SetVisible(bool visible) override;
 		/* 9Ch */	virtual void Update(App::cViewer* pViewer, int deltaTime) override;
 		/* A0h */	virtual void funcA0h() override;  //PLACEHOLDER adds effect surfaces?

@@ -158,7 +158,7 @@ void CreatureController::Update(float dt)
 		Graphics::FilterSettings settings;
 		settings.requiredGroupFlags |= 1LL << ModelManager.GetGroupFlag((uint32_t)Graphics::ModelGroups::TestEnv);
 		Vector3 intersection;
-		mpModelWorld->Raycast(point, point - Vector3(0, 0, 1000.0f), nullptr, &intersection, nullptr, settings);
+		mpModelWorld->FindFirstModelAlongLine(point, point - Vector3(0, 0, 1000.0f), nullptr, &intersection, nullptr, settings);
 	}
 }
 

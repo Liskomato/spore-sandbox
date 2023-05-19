@@ -109,9 +109,9 @@ namespace Terrain
 	void FlatTerrain::func80h() { assert(false); }  // related with player effects
 	void FlatTerrain::func84h() { assert(false); }
 	void FlatTerrain::func88h() { assert(false); }
-	bool FlatTerrain::AddToRender(Graphics::IRenderManager*) { assert(false); return 0; }
-	void FlatTerrain::RemoveFromRender(Graphics::IRenderManager*) { assert(false); }
-	bool FlatTerrain::IsAddedToRender(Graphics::IRenderManager*) { assert(false); return 0; }
+	bool FlatTerrain::AddToRender(Graphics::IRenderer*) { assert(false); return 0; }
+	void FlatTerrain::RemoveFromRender(Graphics::IRenderer*) { assert(false); }
+	bool FlatTerrain::IsAddedToRender(Graphics::IRenderer*) { assert(false); return 0; }
 	void FlatTerrain::SetVisible(bool visible) { assert(false); }
 
 	void FlatTerrain::Update(App::cViewer* pViewer, int deltaTime) 

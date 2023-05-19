@@ -32,7 +32,7 @@ int PhysicallyBasedSky::Release()
 }
 
 
-void PhysicallyBasedSky::Render(int flags, int layerIndex, App::cViewer** pViewers, void*) 
+void PhysicallyBasedSky::DrawLayer(int flags, int layerIndex, App::cViewer** pViewers, Graphics::RenderStatistics&)
 {
 	/*PrecomputeTransmittance(false);
 
@@ -41,27 +41,27 @@ void PhysicallyBasedSky::Render(int flags, int layerIndex, App::cViewer** pViewe
 	plane->SetTexture(materialIndex, 0, mpTransmittanceLUT);
 	plane->Render();*/
 
-	pViewers[0]->LoadTransformations();
+	pViewers[0]->BeginUpdate();
 
 	D3DMATRIX viewMatrix;
-	Graphics::Renderer::GetDevice()->GetTransform(D3DTS_VIEW, &viewMatrix);
+	Graphics::RenderUtils::GetDevice()->GetTransform(D3DTS_VIEW, &viewMatrix);
 	if (!D3DXMatrixInverse((D3DXMATRIX*)&mShaderParams.invViewMatrix, NULL, (D3DXMATRIX*)&viewMatrix)) {
 		App::ConsolePrintF("ERROR: Cannot invert view matrix.");
 	}
 
 	D3DMATRIX projMatrix;
-	Graphics::Renderer::GetDevice()->GetTransform(D3DTS_PROJECTION, &projMatrix);
+	Graphics::RenderUtils::GetDevice()->GetTransform(D3DTS_PROJECTION, &projMatrix);
 	if (!D3DXMatrixInverse((D3DXMATRIX*)&mShaderParams.invProjMatrix, NULL, (D3DXMATRIX*)&projMatrix)) {
 		App::ConsolePrintF("ERROR: Cannot invert projection matrix.");
 	}
 
 	mShaderParams.exposure = 10;
-	mShaderParams.cameraPos = {0, 0, 1};
+	mShaderParams.cameraPos = { 0, 0, 1 };
 	//mShaderParams.sunDirection = Vector3(0, 1.0, 2.0).Normalized();
 	mShaderParams.earthCenter = { 0, 0, -mShaderParams.atmosphere.bottomRadius };
 
 	// customParams
-	Graphics::Renderer::SetShaderData(0x206, &mShaderParams);
+	Graphics::ActiveState::SetShaderData(0x206, &mShaderParams);
 
 	intrusive_ptr<Graphics::GeneratedMesh<Graphics::PosUvVertex>> plane = Graphics::GenerateScreenPlane(1.0f);
 	int materialIndex = plane->AddMaterial(id("SkyRaytrace"));
@@ -166,7 +166,7 @@ void PhysicallyBasedSky::ParseProp()
 	vector<float> mieExtinction;
 	vector<float> absorptionExtinction;
 
-	for (int l = lambdaMin; l <= lambdaMax; l += 10) 
+	for (int l = lambdaMin; l <= lambdaMax; l += 10)
 	{
 		float lambda = static_cast<float>(l) * 1e-3f;  // micrometers
 		float mie = mieAngstromBeta;
@@ -247,7 +247,7 @@ void PhysicallyBasedSky::PrecomputeTransmittance(bool saveTexture)
 	AtmosphereParameters& mAtmosphere = mShaderParams.atmosphere;
 
 	IDirect3DSurface9* oldRenderTarget;
-	Graphics::Renderer::GetDevice()->GetRenderTarget(0, &oldRenderTarget);
+	Graphics::RenderUtils::GetDevice()->GetRenderTarget(0, &oldRenderTarget);
 
 	Clock clock(Clock::Mode::Milliseconds);
 	clock.Start();
@@ -259,30 +259,30 @@ void PhysicallyBasedSky::PrecomputeTransmittance(bool saveTexture)
 	mAtmosphere.transmittanceTextureWidth = float(transmittanceTextureWidth);
 	mAtmosphere.transmittanceTextureHeight = float(transmittanceTextureHeight);
 
-	Raster* renderTarget = new Raster();
-	Raster::CreateRaster(renderTarget,
+	RenderWare::Raster* renderTarget = new RenderWare::Raster();
+	RenderWare::Raster::CreateRaster(renderTarget,
 		transmittanceTextureWidth, transmittanceTextureHeight,
-		1, Raster::kTypeRenderTarget, D3DFORMAT::D3DFMT_A16B16G16R16F);
+		1, RenderWare::Raster::kTypeRenderTarget, D3DFORMAT::D3DFMT_A16B16G16R16F);
 
 	intrusive_ptr<Graphics::GeneratedMesh<Graphics::PosUvVertex>> plane = Graphics::GenerateScreenPlane();
 	plane->AddMaterial(id("PrecomputeTransmittance"));
 
 	IDirect3DSurface9* renderSurface;
 	renderTarget->pTexture->GetSurfaceLevel(0, &renderSurface);
-	Graphics::Renderer::GetDevice()->SetRenderTarget(0, renderSurface);
-	Graphics::Renderer::GetDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 0, 0);
+	Graphics::RenderUtils::GetDevice()->SetRenderTarget(0, renderSurface);
+	Graphics::RenderUtils::GetDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 0, 0);
 
 	// customParams
-	Graphics::Renderer::SetShaderData(0x206, &mAtmosphere);
+	Graphics::ActiveState::SetShaderData(0x206, &mAtmosphere);
 	plane->Render();
-	
+
 	if (mpTransmittanceLUT) {
 		delete mpTransmittanceLUT;
 	}
-	mpTransmittanceLUT = new Raster();
-	Raster::CreateRaster(mpTransmittanceLUT,
+	mpTransmittanceLUT = new RenderWare::Raster();
+	RenderWare::Raster::CreateRaster(mpTransmittanceLUT,
 		transmittanceTextureWidth, transmittanceTextureHeight,
-		1, Raster::kTypeRenderTarget, D3DFORMAT::D3DFMT_A16B16G16R16F);
+		1, RenderWare::Raster::kTypeRenderTarget, D3DFORMAT::D3DFMT_A16B16G16R16F);
 
 	/*mpTransmittanceLUT = new Raster();
 	mpTransmittanceLUT->width = transmittanceTextureWidth;
@@ -296,7 +296,7 @@ void PhysicallyBasedSky::PrecomputeTransmittance(bool saveTexture)
 	IDirect3DSurface9* textureSurface;
 	mpTransmittanceLUT->pTexture->GetSurfaceLevel(0, &textureSurface);
 	/*Graphics::Renderer::GetDevice()->GetRenderTargetData(renderSurface, textureSurface);*/
-	Graphics::Renderer::GetDevice()->StretchRect(renderSurface, NULL, textureSurface, NULL, D3DTEXTUREFILTERTYPE::D3DTEXF_NONE);
+	Graphics::RenderUtils::GetDevice()->StretchRect(renderSurface, NULL, textureSurface, NULL, D3DTEXTUREFILTERTYPE::D3DTEXF_NONE);
 
 	delete renderTarget;
 
@@ -308,7 +308,7 @@ void PhysicallyBasedSky::PrecomputeTransmittance(bool saveTexture)
 			D3DXIFF_DDS, mpTransmittanceLUT->pTexture, nullptr);
 	}
 
-	Graphics::Renderer::GetDevice()->SetRenderTarget(0, oldRenderTarget);
+	Graphics::RenderUtils::GetDevice()->SetRenderTarget(0, oldRenderTarget);
 
 	if (renderSurface) renderSurface->Release();
 
@@ -396,7 +396,7 @@ void PhysicallyBasedSky::PrecomputeSingleScattering()
 	AtmosphereParameters& mAtmosphere = mShaderParams.atmosphere;
 
 	IDirect3DSurface9* oldRenderTarget;
-	Graphics::Renderer::GetDevice()->GetRenderTarget(0, &oldRenderTarget);
+	Graphics::RenderUtils::GetDevice()->GetRenderTarget(0, &oldRenderTarget);
 
 	if (mpSingleScatteringLUT) {
 		delete mpSingleScatteringLUT;
@@ -420,23 +420,23 @@ void PhysicallyBasedSky::PrecomputeSingleScattering()
 	int height = scatteringTextureSizeMu;
 	int depth = scatteringTextureSizeR;
 
-	mpSingleScatteringLUT = new Raster();
+	mpSingleScatteringLUT = new RenderWare::Raster();
 	mpSingleScatteringLUT->width = width;
 	mpSingleScatteringLUT->height = height;
 	mpSingleScatteringLUT->volumeDepth = depth;
 	mpSingleScatteringLUT->format = D3DFORMAT::D3DFMT_A16B16G16R16F;
 	mpSingleScatteringLUT->levels = 1;
-	mpSingleScatteringLUT->flags = Raster::kTypeTexture | Raster::kFlagVolumeTexture | Raster::kFlagDynamicUsage;
+	mpSingleScatteringLUT->flags = RenderWare::Raster::kTypeTexture | RenderWare::Raster::kFlagVolumeTexture | RenderWare::Raster::kFlagDynamicUsage;
 	mpSingleScatteringLUT->depth = 64;
 
-	Graphics::Renderer::GetDevice()->CreateVolumeTexture(width, height, depth, 1, D3DUSAGE_DYNAMIC, D3DFMT_A16B16G16R16F,
+	Graphics::RenderUtils::GetDevice()->CreateVolumeTexture(width, height, depth, 1, D3DUSAGE_DYNAMIC, D3DFMT_A16B16G16R16F,
 		D3DPOOL_DEFAULT, &mpSingleScatteringLUT->pVolumeTexture, NULL);
 	/*IDirect3DVolume9* test;
 	mpSingleScatteringLUT->pVolumeTexture->GetVolumeLevel(0, &test);
 	D3DXLoadVolumeFromFileA(test, NULL, NULL, "E:\\Eric\\SporeModder FX 2.0.0\\Projects\\SandboxMode\\AtmosphericTextures\\singleScatteringLUT.dds", NULL, 0, 0, 0);
 
-	D3DXCreateTextureFromFileA(Graphics::Renderer::GetDevice(), 
-		"E:\\Eric\\SporeModder FX 2.0.0\\Projects\\SandboxMode\\AtmosphericTextures\\singleScatteringLUT.dds", 
+	D3DXCreateTextureFromFileA(Graphics::Renderer::GetDevice(),
+		"E:\\Eric\\SporeModder FX 2.0.0\\Projects\\SandboxMode\\AtmosphericTextures\\singleScatteringLUT.dds",
 		&mpSingleScatteringLUT->pTexture);
 
 	mpSingleScatteringLUT = new Raster();
@@ -455,31 +455,31 @@ void PhysicallyBasedSky::PrecomputeSingleScattering()
 	Graphics::Renderer::GetDevice()->CreateVolumeTexture(width, height, depth, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8,
 		D3DPOOL_SYSTEMMEM, &volumeTexture, NULL);*/
 
-	/*int bufferSize = width * height * depth * 4;
-	uint8_t* buffer = new uint8_t[bufferSize];
-	for (int i = 0; i < bufferSize; ++i) {
-		buffer[i] = 0x80;
-	}
+		/*int bufferSize = width * height * depth * 4;
+		uint8_t* buffer = new uint8_t[bufferSize];
+		for (int i = 0; i < bufferSize; ++i) {
+			buffer[i] = 0x80;
+		}
 
-	D3DLOCKED_BOX rect;
-	mpSingleScatteringLUT->pVolumeTexture->LockBox(0, &rect, NULL, 0);
-	memcpy_s(rect.pBits, bufferSize, buffer, bufferSize);
-	mpSingleScatteringLUT->pVolumeTexture->UnlockBox(0);
+		D3DLOCKED_BOX rect;
+		mpSingleScatteringLUT->pVolumeTexture->LockBox(0, &rect, NULL, 0);
+		memcpy_s(rect.pBits, bufferSize, buffer, bufferSize);
+		mpSingleScatteringLUT->pVolumeTexture->UnlockBox(0);
 
-	//Graphics::Renderer::GetDevice()->UpdateTexture(volumeTexture, mpSingleScatteringLUT->pVolumeTexture);
-	return;*/
+		//Graphics::Renderer::GetDevice()->UpdateTexture(volumeTexture, mpSingleScatteringLUT->pVolumeTexture);
+		return;*/
 
 
-	Raster* tempRenderTarget = new Raster();
-	Raster::CreateRaster(tempRenderTarget, width, height,
-		1, Raster::kTypeRenderTarget, D3DFORMAT::D3DFMT_A16B16G16R16F);
+	RenderWare::Raster* tempRenderTarget = new RenderWare::Raster();
+	RenderWare::Raster::CreateRaster(tempRenderTarget, width, height,
+		1, RenderWare::Raster::kTypeRenderTarget, D3DFORMAT::D3DFMT_A16B16G16R16F);
 
-	Raster* tempTexture = new Raster();
+	RenderWare::Raster* tempTexture = new RenderWare::Raster();
 	tempTexture->width = width;
 	tempTexture->height = height;
 	tempTexture->format = D3DFORMAT::D3DFMT_A16B16G16R16F;
 	tempTexture->levels = 1;
-	tempTexture->flags = Raster::kTypeTexture;
+	tempTexture->flags = RenderWare::Raster::kTypeTexture;
 	tempTexture->depth = 64;
 	tempTexture->CreateTexture(0, D3DPOOL_SYSTEMMEM);
 
@@ -487,14 +487,14 @@ void PhysicallyBasedSky::PrecomputeSingleScattering()
 	IDirect3DSurface9* tempSurface;
 	tempRenderTarget->pTexture->GetSurfaceLevel(0, &renderSurface);
 	tempTexture->pTexture->GetSurfaceLevel(0, &tempSurface);
-	Graphics::Renderer::GetDevice()->SetRenderTarget(0, renderSurface);
+	Graphics::RenderUtils::GetDevice()->SetRenderTarget(0, renderSurface);
 
 
 	intrusive_ptr<Graphics::GeneratedMesh<Graphics::PosUvVertex>> plane = Graphics::GenerateScreenPlane();
 	int materialIndex = plane->AddMaterial(id("PrecomputeSingleScattering"));
 	plane->SetTexture(materialIndex, 0, mpTransmittanceLUT);
 	// customParams
-	Graphics::Renderer::SetShaderData(0x206, &mAtmosphere);
+	Graphics::ActiveState::SetShaderData(0x206, &mAtmosphere);
 
 	int volumeStride = mpSingleScatteringLUT->depth / 8 * width * height;
 	char* volumeBuffer = new char[volumeStride * depth];
@@ -502,10 +502,10 @@ void PhysicallyBasedSky::PrecomputeSingleScattering()
 	for (int i = 0; i < depth; ++i)
 	{
 		mAtmosphere.volumeTextureLevel = float(i);
-		Graphics::Renderer::GetDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 0, 0);
+		Graphics::RenderUtils::GetDevice()->Clear(0, NULL, D3DCLEAR_TARGET, 0, 0, 0);
 		plane->Render();
 
-		Graphics::Renderer::GetDevice()->GetRenderTargetData(renderSurface, tempSurface);
+		Graphics::RenderUtils::GetDevice()->GetRenderTargetData(renderSurface, tempSurface);
 
 		D3DLOCKED_RECT rect;
 		tempTexture->pTexture->LockRect(0, &rect, nullptr, D3DLOCK_READONLY);
@@ -530,7 +530,7 @@ void PhysicallyBasedSky::PrecomputeSingleScattering()
 	D3DXSaveVolumeToFileA("E:\\Eric\\SporeModder FX 2.0.0\\Projects\\SandboxMode\\AtmosphericTextures\\singleScatteringLUT.dds",
 		D3DXIFF_DDS, volume, nullptr, nullptr);
 
-	Graphics::Renderer::GetDevice()->SetRenderTarget(0, oldRenderTarget);
+	Graphics::RenderUtils::GetDevice()->SetRenderTarget(0, oldRenderTarget);
 }
 
 
